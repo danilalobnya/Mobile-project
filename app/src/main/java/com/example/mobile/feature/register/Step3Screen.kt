@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,13 +45,14 @@ import androidx.compose.ui.unit.sp
 import com.example.mobile.R
 
 /**
- * Step3Screen: номер ВУ, дата выдачи, загрузка фото в стиле предыдущих экранов
+ * Step3Screen: номер ВУ, дата выдачи, загрузка фото в стиле скриншота
  */
 @Composable
 fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
     val licenseNumber = remember { mutableStateOf("") }
     val issueDate = remember { mutableStateOf("") }
-    val photosUploaded = remember { mutableStateOf(false) }
+    val licensePhotoUploaded = remember { mutableStateOf(false) }
+    val passportPhotoUploaded = remember { mutableStateOf(false) }
     val error: MutableState<String?> = remember { mutableStateOf(null) }
     val isLoading = remember { mutableStateOf(false) }
 
@@ -86,7 +89,7 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
 
             // Заголовок вверху по центру
             Text(
-                text = "Водительское удостоверение",
+                text = "Создать аккаунт",
                 style = TextStyle(
                     fontFamily = montserrat,
                     fontWeight = FontWeight.SemiBold,
@@ -106,12 +109,40 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
                 .padding(top = 56.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Иконка загрузки фотографии
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .padding(top = 24.dp)
+            ) {
+                androidx.compose.foundation.Image(
+                    painter = painterResource(R.drawable.`frame_17782`),
+                    contentDescription = "Загрузка фото",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
+            }
+
+            // Описание
+            Text(
+                text = "Добавление фотографии поможет владельцам и арендаторам узнать друг друга, когда они будут забирать машину",
+                style = TextStyle(
+                    fontFamily = montserrat,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = Color(0xFF7C7B80),
+                    textAlign = TextAlign.Center
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp, bottom = 32.dp)
+            )
+
             // Форма
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .padding(top = 40.dp),
+                    .weight(1f),
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Top
             ) {
@@ -127,37 +158,36 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp,
                             color = Color(0xFF1C1B1F)
-                        )
+                        ),
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = licenseNumber.value,
                         onValueChange = { text ->
-                            // Ограничение на 20 символов
-                            if (text.length <= 20) {
+                            // Ограничение на 10 цифр
+                            if (text.length <= 10 && text.all { it.isDigit() }) {
                                 licenseNumber.value = text
                             }
                         },
                         placeholder = {
-                            Text("Введите номер ВУ", fontFamily = montserrat)
+                            Text(
+                                "0000000000",
+                                fontFamily = montserrat,
+                                color = Color(0xFF7C7B80)
+                            )
                         },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    // Счетчик символов
-                    Text(
-                        text = "${licenseNumber.value.length}/20",
-                        style = TextStyle(
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        textStyle = TextStyle(
                             fontFamily = montserrat,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
-                            color = if (licenseNumber.value.length == 20) Color(0xFFD32F2F) else Color(0xFF7C7B80)
-                        ),
-                        modifier = Modifier.align(Alignment.End)
+                            fontSize = 16.sp,
+                            color = Color(0xFF1C1B1F)
+                        )
                     )
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(24.dp))
 
                 // Дата выдачи
                 Column(
@@ -171,97 +201,87 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp,
                             color = Color(0xFF1C1B1F)
-                        )
+                        ),
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = issueDate.value,
-                        onValueChange = { issueDate.value = it },
+                        onValueChange = { text ->
+                            // Пользователь сам ставит точки, просто проверяем длину
+                            if (text.length <= 10) {
+                                issueDate.value = text
+                            }
+                        },
                         placeholder = {
-                            Text("DD.MM.YYYY", fontFamily = montserrat)
+                            Text(
+                                "12.10.2005",
+                                fontFamily = montserrat,
+                                color = Color(0xFF7C7B80)
+                            )
                         },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        trailingIcon = {
-                            androidx.compose.foundation.Image(
-                                painter = painterResource(R.drawable.ic_calendar),
-                                contentDescription = "Календарь",
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clickable { /* TODO: Открыть выбор даты */ },
-                                contentScale = ContentScale.Fit
-                            )
-                        }
+                        textStyle = TextStyle(
+                            fontFamily = montserrat,
+                            fontSize = 16.sp,
+                            color = Color(0xFF1C1B1F)
+                        )
                     )
                 }
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(32.dp))
 
-                // Загрузка фото
+                // Загрузка фото водительского удостоверения
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.Start
                 ) {
                     Text(
-                        text = "Загрузите фото документов",
+                        text = "Загрузите фото водительского удостоверения",
                         style = TextStyle(
                             fontFamily = montserrat,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp,
                             color = Color(0xFF1C1B1F)
-                        )
+                        ),
+                        modifier = Modifier.padding(bottom = 12.dp)
                     )
-                    Spacer(Modifier.height(12.dp))
 
-                    // Кнопка загрузки фото
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF2A1246))
-                            .clickable {
-                                photosUploaded.value = true
-                                // Заглушка - имитация загрузки
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Загрузить фото водительского и паспорта",
-                            style = TextStyle(
-                                fontFamily = montserrat,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
-                                color = Color.White
-                            )
-                        )
-                    }
+                    // Кнопка загрузки фото ВУ
+                    UploadPhotoButton(
+                        text = "Загрузить фото",
+                        isUploaded = licensePhotoUploaded.value,
+                        onUploadClick = { licensePhotoUploaded.value = true },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
-                    Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(24.dp))
 
-                    // Статус загрузки
-                    if (photosUploaded.value) {
-                        Text(
-                            text = "✓ Фото успешно загружены",
-                            style = TextStyle(
-                                fontFamily = montserrat,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 12.sp,
-                                color = Color(0xFF4CAF50)
-                            )
-                        )
-                    } else {
-                        Text(
-                            text = "Необходимо загрузить фото водительского удостоверения и паспорта",
-                            style = TextStyle(
-                                fontFamily = montserrat,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 12.sp,
-                                color = Color(0xFF7C7B80)
-                            )
-                        )
-                    }
+                // Загрузка фото паспорта
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = "Загрузите фото паспорта",
+                        style = TextStyle(
+                            fontFamily = montserrat,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            color = Color(0xFF1C1B1F)
+                        ),
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    // Кнопка загрузки фото паспорта
+                    UploadPhotoButton(
+                        text = "Загрузить фото",
+                        isUploaded = passportPhotoUploaded.value,
+                        onUploadClick = { passportPhotoUploaded.value = true },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
@@ -269,9 +289,8 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 66.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(bottom = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Кнопка "Далее"
                 Box(
@@ -279,22 +298,39 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
                         .fillMaxWidth()
                         .height(50.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFF2A1246))
+                        .background(
+                            if (isFormValid(
+                                    licenseNumber.value,
+                                    issueDate.value,
+                                    licensePhotoUploaded.value,
+                                    passportPhotoUploaded.value
+                                ) && !isLoading.value
+                            ) Color(0xFF2A1246) else Color(0xFFE0E0E0)
+                        )
                         .clickable(
-                            enabled = isFormValid(licenseNumber.value, issueDate.value, photosUploaded.value) && !isLoading.value,
+                            enabled = isFormValid(
+                                licenseNumber.value,
+                                issueDate.value,
+                                licensePhotoUploaded.value,
+                                passportPhotoUploaded.value
+                            ) && !isLoading.value,
                             onClick = {
                                 isLoading.value = true
                                 when {
                                     !isValidLicenseNumber(licenseNumber.value) -> {
-                                        error.value = "Введите корректный номер водительского удостоверения"
+                                        error.value = "Введите корректный номер водительского удостоверения (10 цифр)"
                                         isLoading.value = false
                                     }
                                     !isValidDate(issueDate.value) -> {
                                         error.value = "Введите корректную дату выдачи в формате DD.MM.YYYY"
                                         isLoading.value = false
                                     }
-                                    !photosUploaded.value -> {
-                                        error.value = "Пожалуйста, загрузите все необходимые фото"
+                                    !licensePhotoUploaded.value -> {
+                                        error.value = "Пожалуйста, загрузите фото водительского удостоверения"
+                                        isLoading.value = false
+                                    }
+                                    !passportPhotoUploaded.value -> {
+                                        error.value = "Пожалуйста, загрузите фото паспорта"
                                         isLoading.value = false
                                     }
                                     else -> {
@@ -318,7 +354,13 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
                                 fontFamily = montserrat,
                                 fontWeight = FontWeight.Normal,
                                 fontSize = 14.sp,
-                                color = Color.White
+                                color = if (isFormValid(
+                                        licenseNumber.value,
+                                        issueDate.value,
+                                        licensePhotoUploaded.value,
+                                        passportPhotoUploaded.value
+                                    )
+                                ) Color.White else Color(0xFF9E9E9E)
                             )
                         )
                     }
@@ -341,8 +383,67 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
     }
 }
 
-private fun isFormValid(licenseNumber: String, issueDate: String, photosUploaded: Boolean): Boolean {
-    return licenseNumber.isNotBlank() && issueDate.isNotBlank() && photosUploaded
+@Composable
+fun UploadPhotoButton(
+    text: String,
+    isUploaded: Boolean,
+    onUploadClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val montserrat = FontFamily(
+        Font(R.font.montserrat_regular, FontWeight.Normal),
+        Font(R.font.montserrat_semibold, FontWeight.SemiBold)
+    )
+
+    Box(
+        modifier = modifier
+            .height(50.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .border(
+                width = 1.dp,
+                color = if (isUploaded) Color(0xFF4CAF50) else Color(0xFF7C7B80),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .clickable(onClick = onUploadClick)
+            .background(Color.White),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (isUploaded) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Загружено",
+                    tint = Color(0xFF4CAF50),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+            }
+            Text(
+                text = if (isUploaded) "Фото загружено" else text,
+                style = TextStyle(
+                    fontFamily = montserrat,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = if (isUploaded) Color(0xFF4CAF50) else Color(0xFF1C1B1F)
+                )
+            )
+        }
+    }
+}
+
+private fun isFormValid(
+    licenseNumber: String,
+    issueDate: String,
+    licensePhotoUploaded: Boolean,
+    passportPhotoUploaded: Boolean
+): Boolean {
+    return licenseNumber.isNotBlank() &&
+            issueDate.isNotBlank() &&
+            licensePhotoUploaded &&
+            passportPhotoUploaded
 }
 
 private fun isValidDate(date: String): Boolean {
@@ -355,6 +456,6 @@ private fun isValidDate(date: String): Boolean {
 }
 
 private fun isValidLicenseNumber(licenseNumber: String): Boolean {
-    // Простая валидация: номер должен содержать только буквы и цифры, длиной от 5 до 20 символов
-    return licenseNumber.matches(Regex("^[A-Za-z0-9]{5,20}$"))
+    // Валидация: ровно 10 цифр
+    return licenseNumber.matches(Regex("^\\d{10}$"))
 }
