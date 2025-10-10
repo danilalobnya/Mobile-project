@@ -44,6 +44,11 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
+    fun togglePasswordVisibility() {
+        _uiState.value = _uiState.value.copy(passwordVisible = !_uiState.value.passwordVisible)
+    }
+
+
     private fun validateForm() {
         val emailOk = EMAIL_REGEX.toRegex().matches(_uiState.value.email)
         val passOk = _uiState.value.password.isNotBlank()
