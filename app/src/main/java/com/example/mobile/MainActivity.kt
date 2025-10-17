@@ -17,6 +17,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import dagger.hilt.android.AndroidEntryPoint
 import com.example.mobile.feature.onboarding.OnboardingSliderScreen
 import com.example.mobile.core.connectivity.ConnectivityObserver
 import com.example.mobile.core.datastore.AppPreferences
@@ -36,6 +37,7 @@ import kotlinx.coroutines.launch
  * MainActivity: точка входа в приложение.
  * Здесь настраиваем Compose и подключаем навигацию между экранами.
  */
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     lateinit var connectivityObserver: ConnectivityObserver
     lateinit var appPreferences: AppPreferences
