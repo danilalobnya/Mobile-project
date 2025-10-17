@@ -17,7 +17,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.atmose.drivenext.presentation.screens.onboarding.OnboardingSliderScreen
+import com.example.mobile.feature.onboarding.OnboardingSliderScreen
 import com.example.mobile.core.connectivity.ConnectivityObserver
 import com.example.mobile.core.datastore.AppPreferences
 import com.example.mobile.feature.noconnection.NoConnectionScreen
@@ -77,14 +77,8 @@ fun AppNavHost(
         }
         composable("onboarding") {
             OnboardingSliderScreen(
-                onSkip = {
-                    // Пропустить онбординг и перейти к авторизации
-                    onCompleteOnboarding()
-                },
-                onFinish = {
-                    // Завершить онбординг и перейти к авторизации
-                    onCompleteOnboarding()
-                }
+                onSkip = onCompleteOnboarding,
+                onFinish = onCompleteOnboarding
             )
         }
         composable("auth_choice") {
@@ -190,8 +184,10 @@ private fun MainActivity.decideStartDestination(navController: NavHostController
  * Согласно требованиям: после онбординга информация сохраняется, чтобы не показывать повторно.
  */
 private fun MainActivity.completeOnboardingAndGoToAuth(navController: NavHostController) {
+    android.util.Log.d("MainActivity", "completeOnboardingAndGoToAuth called")
     lifecycleScope.launch {
         appPreferences.setOnboardingCompleted(true)
+        android.util.Log.d("MainActivity", "Onboarding completed, navigating to auth_choice")
         navController.navigate("auth_choice") {
             popUpTo("onboarding") { inclusive = true }
         }

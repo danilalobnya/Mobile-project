@@ -1,4 +1,4 @@
-package com.atmose.drivenext.presentation.screens.onboarding
+package com.example.mobile.feature.onboarding
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.em
+import androidx.compose.ui.zIndex
 import kotlinx.coroutines.launch
 import com.example.mobile.R
 
@@ -83,9 +84,17 @@ fun OnboardingSliderScreen(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 40.dp, end = 24.dp)
+                .zIndex(1f) // Убеждаемся, что кнопка поверх других элементов
         ) {
             TextButton(
-                onClick = onSkip
+                onClick = {
+                    // Добавляем отладочную информацию
+                    android.util.Log.d("Onboarding", "Skip button clicked")
+                    onSkip()
+                },
+                modifier = Modifier
+                    .background(Color.White.copy(alpha = 0.9f)) // Полупрозрачный фон для видимости
+                    .padding(8.dp)
             ) {
                 Text(
                     text = "Пропустить",

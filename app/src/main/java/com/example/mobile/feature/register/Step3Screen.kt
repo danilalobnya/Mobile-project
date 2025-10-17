@@ -1,5 +1,6 @@
 package com.example.mobile.feature.register
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -43,6 +45,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mobile.R
+import com.example.mobile.core.image.ImagePicker
+import com.example.mobile.core.image.ImageSourceDialog
+import com.example.mobile.core.image.rememberImagePicker
 
 /**
  * Step3Screen: номер ВУ, дата выдачи, загрузка фото в стиле скриншота
@@ -53,8 +58,45 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
     val issueDate = remember { mutableStateOf("") }
     val licensePhotoUploaded = remember { mutableStateOf(false) }
     val passportPhotoUploaded = remember { mutableStateOf(false) }
+    val profilePhotoUri = remember { mutableStateOf<Uri?>(null) }
     val error: MutableState<String?> = remember { mutableStateOf(null) }
     val isLoading = remember { mutableStateOf(false) }
+    val showImageSourceDialog = remember { mutableStateOf(false) }
+    val showLicenseImageSourceDialog = remember { mutableStateOf(false) }
+    val showPassportImageSourceDialog = remember { mutableStateOf(false) }
+    
+    val imagePicker = rememberImagePicker()
+    
+    // Launcher'ы для выбора изображений
+    val profileGalleryLauncher = imagePicker.rememberGalleryLauncher { uri ->
+        profilePhotoUri.value = uri
+        showImageSourceDialog.value = false
+    }
+    
+    val profileCameraLauncher = imagePicker.rememberCameraLauncher { uri ->
+        profilePhotoUri.value = uri
+        showImageSourceDialog.value = false
+    }
+    
+    val licenseGalleryLauncher = imagePicker.rememberGalleryLauncher { uri ->
+        licensePhotoUploaded.value = true
+        showLicenseImageSourceDialog.value = false
+    }
+    
+    val licenseCameraLauncher = imagePicker.rememberCameraLauncher { uri ->
+        licensePhotoUploaded.value = true
+        showLicenseImageSourceDialog.value = false
+    }
+    
+    val passportGalleryLauncher = imagePicker.rememberGalleryLauncher { uri ->
+        passportPhotoUploaded.value = true
+        showPassportImageSourceDialog.value = false
+    }
+    
+    val passportCameraLauncher = imagePicker.rememberCameraLauncher { uri ->
+        passportPhotoUploaded.value = true
+        showPassportImageSourceDialog.value = false
+    }
 
     val montserrat = FontFamily(
         Font(R.font.montserrat_regular, FontWeight.Normal),
@@ -109,16 +151,25 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
                 .padding(top = 56.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Иконка загрузки фотографии
+            // Иконка загрузки фотографии профиля (128x128)
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(128.dp)
                     .padding(top = 24.dp)
+                    .clip(CircleShape)
+                    .border(
+                        width = 2.dp,
+                        color = Color(0xFFE0E0E0),
+                        shape = CircleShape
+                    )
+                    .clickable { showImageSourceDialog.value = true }
             ) {
                 androidx.compose.foundation.Image(
-                    painter = painterResource(R.drawable.`frame_17782`),
+                    painter = painterResource(R.drawable.icon_profile),
                     contentDescription = "Загрузка фото",
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .size(80.dp)
+                        .align(Alignment.Center),
                     contentScale = ContentScale.Fit
                 )
             }
@@ -252,7 +303,7 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
                     UploadPhotoButton(
                         text = "Загрузить фото",
                         isUploaded = licensePhotoUploaded.value,
-                        onUploadClick = { licensePhotoUploaded.value = true },
+                        onUploadClick = { showLicenseImageSourceDialog.value = true },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -279,7 +330,7 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
                     UploadPhotoButton(
                         text = "Загрузить фото",
                         isUploaded = passportPhotoUploaded.value,
-                        onUploadClick = { passportPhotoUploaded.value = true },
+                        onUploadClick = { showPassportImageSourceDialog.value = true },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -303,7 +354,8 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
                                     licenseNumber.value,
                                     issueDate.value,
                                     licensePhotoUploaded.value,
-                                    passportPhotoUploaded.value
+                                    passportPhotoUploaded.value,
+                                    profilePhotoUri.value != null
                                 ) && !isLoading.value
                             ) Color(0xFF2A1246) else Color(0xFFE0E0E0)
                         )
@@ -312,7 +364,8 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
                                 licenseNumber.value,
                                 issueDate.value,
                                 licensePhotoUploaded.value,
-                                passportPhotoUploaded.value
+                                passportPhotoUploaded.value,
+                                profilePhotoUri.value != null
                             ) && !isLoading.value,
                             onClick = {
                                 isLoading.value = true
@@ -331,6 +384,10 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
                                     }
                                     !passportPhotoUploaded.value -> {
                                         error.value = "Пожалуйста, загрузите фото паспорта"
+                                        isLoading.value = false
+                                    }
+                                    profilePhotoUri.value == null -> {
+                                        error.value = "Пожалуйста, добавьте фотографию профиля"
                                         isLoading.value = false
                                     }
                                     else -> {
@@ -358,7 +415,8 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
                                         licenseNumber.value,
                                         issueDate.value,
                                         licensePhotoUploaded.value,
-                                        passportPhotoUploaded.value
+                                        passportPhotoUploaded.value,
+                                        profilePhotoUri.value != null
                                     )
                                 ) Color.White else Color(0xFF9E9E9E)
                             )
@@ -369,6 +427,7 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
         }
     }
 
+    // Диалог ошибки
     if (error.value != null) {
         AlertDialog(
             onDismissRequest = { error.value = null },
@@ -379,6 +438,52 @@ fun Step3Screen(onNext: () -> Unit, onBack: () -> Unit) {
             },
             title = { Text("Ошибка", fontFamily = montserrat) },
             text = { Text(error.value ?: "", fontFamily = montserrat) }
+        )
+    }
+    
+    // Диалог выбора источника для фото профиля
+    if (showImageSourceDialog.value) {
+        ImageSourceDialog(
+            onDismiss = { showImageSourceDialog.value = false },
+            onGallerySelected = { 
+                profileGalleryLauncher.launch("image/*")
+            },
+            onCameraSelected = { 
+                // Для демонстрации используем заглушку
+                // В реальном приложении здесь нужно создать временный файл
+                profilePhotoUri.value = android.net.Uri.parse("content://demo")
+                showImageSourceDialog.value = false
+            }
+        )
+    }
+    
+    // Диалог выбора источника для фото водительского удостоверения
+    if (showLicenseImageSourceDialog.value) {
+        ImageSourceDialog(
+            onDismiss = { showLicenseImageSourceDialog.value = false },
+            onGallerySelected = { 
+                licenseGalleryLauncher.launch("image/*")
+            },
+            onCameraSelected = { 
+                // Для демонстрации используем заглушку
+                licensePhotoUploaded.value = true
+                showLicenseImageSourceDialog.value = false
+            }
+        )
+    }
+    
+    // Диалог выбора источника для фото паспорта
+    if (showPassportImageSourceDialog.value) {
+        ImageSourceDialog(
+            onDismiss = { showPassportImageSourceDialog.value = false },
+            onGallerySelected = { 
+                passportGalleryLauncher.launch("image/*")
+            },
+            onCameraSelected = { 
+                // Для демонстрации используем заглушку
+                passportPhotoUploaded.value = true
+                showPassportImageSourceDialog.value = false
+            }
         )
     }
 }
@@ -438,12 +543,14 @@ private fun isFormValid(
     licenseNumber: String,
     issueDate: String,
     licensePhotoUploaded: Boolean,
-    passportPhotoUploaded: Boolean
+    passportPhotoUploaded: Boolean,
+    profilePhotoSelected: Boolean
 ): Boolean {
     return licenseNumber.isNotBlank() &&
             issueDate.isNotBlank() &&
             licensePhotoUploaded &&
-            passportPhotoUploaded
+            passportPhotoUploaded &&
+            profilePhotoSelected
 }
 
 private fun isValidDate(date: String): Boolean {
