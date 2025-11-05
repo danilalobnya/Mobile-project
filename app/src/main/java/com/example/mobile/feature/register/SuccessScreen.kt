@@ -1,4 +1,4 @@
-package com.atmose.drivenext.presentation.screens.register
+package com.example.mobile.feature.register
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

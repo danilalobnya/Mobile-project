@@ -68,6 +68,9 @@ dependencies {
     // DataStore for simple persistence (onboarding/token)
     implementation(libs.androidx.datastore.preferences)
 
+    // Coil for image loading
+    implementation(libs.coil.compose)
+
     // Hilt for dependency injection
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)

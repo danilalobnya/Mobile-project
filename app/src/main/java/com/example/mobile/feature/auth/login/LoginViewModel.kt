@@ -59,13 +59,13 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
      * Имитируем запрос на сервер: успешный, если email содержит "@" и пароль длиной >= 6.
      * Возвращаем фейковый токен через callback.
      */
-    fun login(onSuccess: (String) -> Unit) {
+    fun login(onSuccess: (String, String) -> Unit) {
         if (!_uiState.value.isFormValid || _uiState.value.isLoading) return
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
             try {
                 val token = authRepository.loginWithEmail(_uiState.value.email, _uiState.value.password)
-                onSuccess(token)
+                onSuccess(token, _uiState.value.email)
                 _uiState.value = _uiState.value.copy(isLoading = false)
             } catch (t: Throwable) {
                 _uiState.value = _uiState.value.copy(
@@ -79,13 +79,13 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
     /**
      * Заглушка авторизации через Google.
      */
-    fun loginWithGoogle(onSuccess: (String) -> Unit) {
+    fun loginWithGoogle(onSuccess: (String, String) -> Unit) {
         if (_uiState.value.isLoading) return
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
             try {
                 val token = authRepository.loginWithGoogle()
-                onSuccess(token)
+                onSuccess(token, _uiState.value.email.ifEmpty { "google.user@example.com" })
                 _uiState.value = _uiState.value.copy(isLoading = false)
             } catch (t: Throwable) {
                 _uiState.value = _uiState.value.copy(

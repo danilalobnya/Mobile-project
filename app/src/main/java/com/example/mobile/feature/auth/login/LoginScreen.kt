@@ -52,7 +52,7 @@ import com.example.mobile.data.auth.AuthRepositoryFake
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit, // ИЗМЕНИТЬ: onBackToRegister -> onNavigateToRegister
-    onLoginSuccess: (String) -> Unit,
+    onLoginSuccess: (String, String) -> Unit,
     onForgotPassword: () -> Unit = {},
     vm: LoginViewModel = run {
         val repo = remember { AuthRepositoryFake() }

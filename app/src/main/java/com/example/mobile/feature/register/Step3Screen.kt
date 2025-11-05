@@ -566,3 +566,13 @@ private fun isValidLicenseNumber(licenseNumber: String): Boolean {
     // Валидация: ровно 10 цифр
     return licenseNumber.matches(Regex("^\\d{10}$"))
 }
+
+// Утилита для создания URI изображений
+fun createImageUri(context: android.content.Context): android.net.Uri {
+    val filename = "IMG_${System.currentTimeMillis()}.jpg"
+    return androidx.core.content.FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        java.io.File(context.filesDir, filename)
+    )
+}

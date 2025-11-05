@@ -43,7 +43,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import com.example.mobile.R
+import com.example.mobile.core.datastore.AppPreferences
 
 /**
  * Step1Screen: экран регистрации в стиле экрана входа
@@ -54,6 +58,10 @@ fun Step1Screen(
     onBack: () -> Unit,
     onNavigateToLogin: () -> Unit = {} // ДОБАВИТЬ: параметр для навигации на логин
 ) {
+    val ctx = LocalContext.current
+    val prefs = AppPreferences(ctx)
+    val scope = rememberCoroutineScope()
+    
     val email = remember { mutableStateOf("") }
     val pass = remember { mutableStateOf("") }
     val pass2 = remember { mutableStateOf("") }
@@ -292,6 +300,10 @@ fun Step1Screen(
                                         isLoading.value = false
                                     }
                                     else -> {
+                                        // Сохраняем email перед переходом на следующий шаг
+                                        scope.launch {
+                                            prefs.setUserProfile("", email.value) // Имя пустое, сохраним на следующем шаге
+                                        }
                                         // Имитация API запроса
                                         android.os.Handler().postDelayed({
                                             isLoading.value = false

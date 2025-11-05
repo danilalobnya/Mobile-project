@@ -28,8 +28,10 @@ import com.example.mobile.feature.auth.login.LoginScreen
 import com.example.mobile.feature.register.Step1Screen
 import com.example.mobile.feature.register.Step2Screen
 import com.example.mobile.feature.register.Step3Screen
-import com.atmose.drivenext.presentation.screens.register.SuccessScreen
+import com.example.mobile.feature.register.SuccessScreen
 import com.example.mobile.feature.home.HomeScreen
+import com.example.mobile.feature.settings.SettingsScreen
+import com.example.mobile.feature.profile.ProfileScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -53,7 +55,8 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     onDecideStart = { decideStartDestination(navController) },
                     onCompleteOnboarding = { completeOnboardingAndGoToAuth(navController) },
-                    onLoginSuccess = { token -> onLoginSuccess(navController, token) }
+                    onLoginSuccess = { nav, token, email -> onLoginSuccess(nav, token, email) },
+                    onLogout = { performLogout(navController) }
                 )
             }
         }
@@ -68,7 +71,8 @@ fun AppNavHost(
     navController: NavHostController,
     onDecideStart: () -> Unit,
     onCompleteOnboarding: () -> Unit,
-    onLoginSuccess: (String) -> Unit
+    onLoginSuccess: (NavHostController, String, String) -> Unit,
+    onLogout: () -> Unit = {}
 ) {
     NavHost(navController = navController, startDestination = "splash") {
         composable("splash") {
@@ -94,7 +98,7 @@ fun AppNavHost(
                 onNavigateToRegister = {
                     navController.navigate("register_step1") // ИЗМЕНИТЬ: переход на регистрацию
                 },
-                onLoginSuccess = { token -> onLoginSuccess(token) },
+                onLoginSuccess = { token, email -> onLoginSuccess(navController, token, email) },
                 onForgotPassword = { /* навигация к восстановлению пароля */ }
             )
         }
@@ -131,10 +135,24 @@ fun AppNavHost(
             })
         }
         composable("home") {
-            HomeScreen(onResetAppState = {
-                // Очистим хранилище и вернёмся на сплэш, как при первом запуске
-                (navController.context as MainActivity).resetAppAndRestart(navController)
+            HomeScreen(onNavigateToSettings = {
+                navController.navigate("settings")
             })
+        }
+        composable("settings") {
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenProfile = { navController.navigate("profile") },
+                onLogout = onLogout,
+                onOpenHelp = { /* TODO: экран помощи */ },
+                onOpenMyBookings = { /* TODO: экран бронирований */ }
+            )
+        }
+        composable("profile") {
+            ProfileScreen(
+                onBack = { navController.popBackStack() },
+                onLogout = onLogout
+            )
         }
     }
 }
@@ -200,9 +218,16 @@ private fun MainActivity.completeOnboardingAndGoToAuth(navController: NavHostCon
  * Обработка успешного входа: сохранить токен и перейти на главный экран.
  * Согласно требованиям: сохранить данные входа и активную сессию.
  */
-private fun MainActivity.onLoginSuccess(navController: NavHostController, token: String) {
+private fun MainActivity.onLoginSuccess(navController: NavHostController, token: String, email: String = "") {
     lifecycleScope.launch {
         appPreferences.setAccessToken(token)
+        if (email.isNotEmpty()) {
+            // Сохраняем email из поля входа
+            val parts = email.split("@")
+            if (parts.isNotEmpty()) {
+                appPreferences.setUserProfile(parts[0], email)
+            }
+        }
         navController.navigate("home") {
             popUpTo("auth_choice") { inclusive = true }
         }
@@ -218,6 +243,19 @@ private fun MainActivity.resetAppAndRestart(navController: NavHostController) {
         appPreferences.setAccessToken(null)
         appPreferences.setOnboardingCompleted(false)
         navController.navigate("splash") {
+            popUpTo(0) { inclusive = true }
+        }
+    }
+}
+
+/**
+ * Выполнение выхода пользователя: очищаем данные профиля и токен,
+ * затем переходим на экран входа.
+ */
+private fun MainActivity.performLogout(navController: NavHostController) {
+    lifecycleScope.launch {
+        appPreferences.logout()
+        navController.navigate("auth_choice") {
             popUpTo(0) { inclusive = true }
         }
     }

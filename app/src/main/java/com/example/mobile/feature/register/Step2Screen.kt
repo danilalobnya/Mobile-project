@@ -41,13 +41,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import com.example.mobile.R
+import com.example.mobile.core.datastore.AppPreferences
 
 /**
  * Step2Screen: ФИО, дата рождения, пол в стиле первого экрана
  */
 @Composable
 fun Step2Screen(onNext: () -> Unit, onBack: () -> Unit) {
+    val ctx = LocalContext.current
+    val prefs = AppPreferences(ctx)
+    val scope = rememberCoroutineScope()
+    
     val lastName = remember { mutableStateOf("") }
     val firstName = remember { mutableStateOf("") }
     val middleName = remember { mutableStateOf("") }
@@ -340,6 +349,13 @@ fun Step2Screen(onNext: () -> Unit, onBack: () -> Unit) {
                                         isLoading.value = false
                                     }
                                     else -> {
+                                        // Сохраняем имя перед переходом на следующий шаг
+                                        scope.launch {
+                                            // Получаем текущий email из DataStore
+                                            val email = prefs.userEmailFlow.first()
+                                            val fullName = "${lastName.value} ${firstName.value} ${middleName.value}".trim()
+                                            prefs.setUserProfile(fullName, email)
+                                        }
                                         // Имитация API запроса
                                         android.os.Handler().postDelayed({
                                             isLoading.value = false
